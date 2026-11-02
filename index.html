@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Puck's Peak</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #111; overflow: hidden; font-family: system-ui, sans-serif; }
+  #stage { position: relative; width: min(100vw, calc(100vh * 588 / 600)); aspect-ratio: 588 / 600; margin: 0 auto; }
+  #player, #cover { position: absolute; inset: 0; }
+  #cover { background: #111 url(cover.jpg) center / cover no-repeat; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  #cover::before { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+  #play { position: relative; padding: .7em 1.6em; font-size: clamp(18px, 5vw, 30px); font-weight: 800; color: #fff;
+          background: #ff3399; border: 4px solid #fff; border-radius: 999px; box-shadow: 0 6px 0 #a3125c, 0 10px 24px rgba(0,0,0,.4); }
+  #cover:hover #play { transform: translateY(-2px); }
+  #status { position: absolute; bottom: 4%; left: 0; right: 0; text-align: center; color: #fff; font-size: 14px; text-shadow: 0 1px 3px #000; }
+  #fs { position: absolute; right: 6px; bottom: 6px; z-index: 5; display: none; padding: 4px 8px; font-size: 12px;
+        background: rgba(0,0,0,.55); color: #fff; border: 1px solid rgba(255,255,255,.5); border-radius: 6px; cursor: pointer; }
+  #stage.playing #fs { display: block; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="player"></div>
+  <div id="cover" role="button" tabindex="0" aria-label="Play Puck's Peak">
+    <div id="play">&#9654; Click to Play</div>
+    <div id="status"></div>
+  </div>
+  <button id="fs" title="Fullscreen">&#x26F6; Fullscreen</button>
+</div>
+<script>
+  window.RufflePlayer = window.RufflePlayer || {};
+  window.RufflePlayer.config = {
+    autoplay: "on", unmuteOverlay: "hidden", splashScreen: false, logLevel: "error",
+    letterbox: "on", contextMenu: "rightClickOnly", allowScriptAccess: true,
+    ...(location.search.includes("test") ? { preferredRenderer: "canvas" } : {}),
+  };
+</script>
+<script src="ruffle/ruffle.js"></script>
+<script>
+  const stage = document.getElementById("stage"), cover = document.getElementById("cover");
+  let started = false;
+  function start() {
+    if (started) return; started = true;
+    document.getElementById("status").textContent = "Loading…";
+    const player = window.RufflePlayer.newest().createPlayer();
+    player.style.width = "100%"; player.style.height = "100%";
+    document.getElementById("player").appendChild(player);
+    player.ruffle().load({ url: "blockbuilder.swf", base: "./" }).then(() => {
+      cover.remove(); stage.classList.add("playing"); player.focus();
+    }).catch(() => { document.getElementById("status").textContent = "Couldn't load the game. Try reloading the page."; started = false; });
+  }
+  cover.addEventListener("click", start);
+  cover.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") start(); });
+  document.getElementById("fs").addEventListener("click", () => {
+    if (document.fullscreenElement) document.exitFullscreen(); else stage.requestFullscreen?.();
+  });
+</script>
+</body>
+</html>
